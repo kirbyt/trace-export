@@ -8,6 +8,8 @@
 #
 # This script downloads the GPX data from a Trace user's account.
 #
+# Usage: python trace-export.py your@email.com your-password
+#
 # Written for Python 2.7.x. Requires BeautifulSoup available at:
 # https://www.crummy.com/software/BeautifulSoup/
 #
