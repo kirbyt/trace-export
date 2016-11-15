@@ -6,6 +6,10 @@ Usage:
 
 `python trace-export.py your@email.com your-password`
 
+## Requirements
+
+This script was written and tested with for Python 2.7.10. It requires [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/).
+
 # License
 
 MIT License
