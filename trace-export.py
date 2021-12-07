@@ -2,15 +2,15 @@
 #
 # trace-export.py
 #
-# Copyright (c) 2016 Kirby Turner
+# Copyright (c) 2021 Sam Tarantino
 #
-# Version 1.0.0
+# Version 2.0.0
 #
 # This script downloads the GPX data from a Trace user's account.
 #
 # Usage: python trace-export.py your@email.com your-password
 #
-# Written for Python 2.7.x. Requires BeautifulSoup available at:
+# Written for Python 3.x. Requires BeautifulSoup available at:
 # https://www.crummy.com/software/BeautifulSoup/
 #
 # The MIT License (MIT)
@@ -33,17 +33,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
-
-
+from http.client import HTTPMessage
+from urllib import request, parse
 import urllib
-import urllib2
-import cookielib
+import http.cookiejar as cookielib
 import sys
 from bs4 import BeautifulSoup
 
 
 def requestHtml(opener, url, data=None):
-    request = urllib2.Request(url, data)
+    request = urllib.request.Request(url, data)
     urlHandle = opener.open(request)
     html = urlHandle.read()
     return html
@@ -51,11 +50,11 @@ def requestHtml(opener, url, data=None):
 
 def scrapeIt():
     handlers = []
-    cj = cookielib.CookieJar();
+    cj = cookielib.CookieJar()
     cj.set_policy(cookielib.DefaultCookiePolicy(rfc2965=True))
-    cjhdr = urllib2.HTTPCookieProcessor(cj)
+    cjhdr = urllib.request.HTTPCookieProcessor(cj)
     handlers.append(cjhdr)
-    opener = urllib2.build_opener(*handlers)
+    opener = urllib.request.build_opener(*handlers)
 
     # Go to the login page. This sets initial cookies.
     loginURL = 'https://snow.traceup.com/login'
@@ -64,8 +63,8 @@ def scrapeIt():
     # Post the login credentials.
     processLoginURL = 'https://snow.traceup.com/login'
     values = {'email': sys.argv[1], 'password': sys.argv[2], 'step': 'process'}
-    data = urllib.urlencode(values)
-    html = requestHtml(opener, processLoginURL, data)
+    data = urllib.parse.urlencode(values)
+    html = requestHtml(opener, processLoginURL, data.encode('utf-8'))
     soup = BeautifulSoup(html, "html.parser")
 
     # Go to the GPX data export page.
@@ -75,12 +74,11 @@ def scrapeIt():
 
     for option in soup.find_all('option'):
         gpxURL = 'http://snow.traceup.com/settings/gpx'
-        data = urllib.urlencode({'selected_visit': option.get('value')})
-        request = urllib2.Request(gpxURL, data)
+        data = urllib.parse.urlencode({'selected_visit': option.get('value')})
+        request = urllib.request.Request(gpxURL, data.encode('utf-8'))
         gpxFile = opener.open(request)
-        meta = gpxFile.info()
-        disposition = meta.getheaders('Content-Disposition')
-        fileName = disposition[0].split('; ')[1].replace('filename=', '')
+        meta: HTTPMessage = gpxFile.headers
+        fileName = meta.get_filename()
         print('Downloading ' + fileName)
         with open('./' + fileName, 'wb') as output:
             output.write(gpxFile.read())
